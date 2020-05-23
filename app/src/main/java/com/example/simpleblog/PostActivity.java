@@ -23,31 +23,16 @@ import java.util.Objects;
 
 public class PostActivity extends AppCompatActivity {
 
-    private ImageButton mSelectImage = this.findViewById(R.id.imageSelect);
-    private EditText mPostTitle = findViewById(R.id.titleField);
-    private EditText mPostDesc;
-
-    private Uri mImageUri;
+    private ImageButton mSelectImage;
 
     private static final int GALLERY_REQUEST = 1;
-
-    private StorageReference mStorage;
-
-    public PostActivity() {
-        mImageUri = null;
-        mPostDesc = findViewById(R.id.descField);
-    }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post);
 
-        mStorage = FirebaseStorage.getInstance().getReference();
-
-        Button mSubmitBtn = findViewById(R.id.submitBtn);
-
+        mSelectImage = (ImageButton) findViewById(R.id.imageSelect);
 
         mSelectImage.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -58,63 +43,10 @@ public class PostActivity extends AppCompatActivity {
             }
         });
 
-        mSubmitBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startPosting();
-            }
-        });
-    }
-
-    private void startPosting() {
-
-
-
-         String title_val = mPostTitle.getText().toString().trim();
-        String desc_val = mPostDesc.getText().toString().trim();
-
-       /* if(!TextUtils.isEmpty(title_val) && !TextUtils.isEmpty(desc_val) && mImageUri != null){
-
-            final StorageReference filepath = mStorage.child("Blog_Images").child(mImageUri.getLastPathSegment());
-
-            filepath.putFile(mImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    @SuppressWarnings("VisibleForTests")
-                    Uri downloadUrl = UploadTask.TaskSnapshot.getDownloadUrl();
-                }
-            });
-
-        } */
-        if(!TextUtils.isEmpty(title_val) && !TextUtils.isEmpty(desc_val) && mImageUri != null){
-
-
-
-
-            StorageReference filePath = mStorage.child("Post_images").child(mImageUri.getLastPathSegment());
-            filePath.putFile(mImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-
-
-
-
-                    Task<Uri> task = taskSnapshot.getMetadata().getReference().getDownloadUrl();
-                    task.addOnSuccessListener(new OnSuccessListener<Uri>() {
-                        @Override
-                        public void onSuccess(Uri uri) {
-                            String photoLink = uri.toString();
-                        }
-                    });
-
-
-
-
-                }
-            });
-        }
 
     }
+
+
 
 
     @Override
@@ -122,7 +54,7 @@ public class PostActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if(requestCode == GALLERY_REQUEST && resultCode == RESULT_OK){
-            mImageUri = data.getData();
+            Uri mImageUri = data.getData();
 
             mSelectImage.setImageURI(mImageUri);
         }
