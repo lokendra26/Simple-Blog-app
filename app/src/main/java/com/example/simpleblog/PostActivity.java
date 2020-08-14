@@ -24,15 +24,34 @@ import java.util.Objects;
 public class PostActivity extends AppCompatActivity {
 
     private ImageButton mSelectImage;
+    private EditText mPostTitle;
+    private EditText mPostDesc;
+
+    private Button mSubmitBtn;
+
+    private Uri mImageUri=null;
 
     private static final int GALLERY_REQUEST = 1;
+
+    private StorageReference mStorage;
+
+    private  ProgressDialog mProgress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post);
 
+        mStorage = FirebaseStorage.getInstance().getReference();
+
         mSelectImage = (ImageButton) findViewById(R.id.imageSelect);
+
+        mPostTitle = (EditText) findViewById(R.id.titleField);
+        mPostDesc = (EditText) findViewById(R.id.descField);
+
+        mSubmitBtn = (Button) findViewById(R.id.submitBtn);
+
+        mProgress = new ProgressDialog(this);
 
         mSelectImage.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -43,10 +62,42 @@ public class PostActivity extends AppCompatActivity {
             }
         });
 
+        mSubmitBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+                startPosting();
+            }
+        });
     }
 
+    private void startPosting() {
 
+        mProgress.setMessage("Posting to Blog ...");
+        mProgress.show();
+
+        String title_val = mPostTitle.getText().toString().trim();
+        String desc_val = mPostDesc.getText().toString().trim();
+
+        if(!TextUtils.isEmpty(title_val) && !TextUtils.isEmpty(desc_val) && mImageUri != null){
+
+            final StorageReference filepath = mStorage.child("Blog_Images").child(mImageUri.getLastPathSegment());
+
+            filepath.putFile(mImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    filepath.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            final Uri downloadUrl = uri;
+                            mProgress.dismiss();
+                        }
+                    });
+
+                }
+            });
+        }
+    }
 
 
     @Override
@@ -54,7 +105,7 @@ public class PostActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if(requestCode == GALLERY_REQUEST && resultCode == RESULT_OK){
-            Uri mImageUri = data.getData();
+            mImageUri = data.getData();
 
             mSelectImage.setImageURI(mImageUri);
         }
