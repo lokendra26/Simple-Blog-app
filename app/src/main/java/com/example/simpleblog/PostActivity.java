@@ -15,6 +15,8 @@ import android.widget.ImageButton;
 
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -34,6 +36,7 @@ public class PostActivity extends AppCompatActivity {
     private static final int GALLERY_REQUEST = 1;
 
     private StorageReference mStorage;
+    private DatabaseReference mDatabase;
 
     private  ProgressDialog mProgress;
 
@@ -43,6 +46,7 @@ public class PostActivity extends AppCompatActivity {
         setContentView(R.layout.activity_post);
 
         mStorage = FirebaseStorage.getInstance().getReference();
+        mDatabase= FirebaseDatabase.getInstance().getReference().child("Blog");
 
         mSelectImage = (ImageButton) findViewById(R.id.imageSelect);
 
@@ -76,8 +80,8 @@ public class PostActivity extends AppCompatActivity {
         mProgress.setMessage("Posting to Blog ...");
         mProgress.show();
 
-        String title_val = mPostTitle.getText().toString().trim();
-        String desc_val = mPostDesc.getText().toString().trim();
+        final String title_val = mPostTitle.getText().toString().trim();
+        final String desc_val = mPostDesc.getText().toString().trim();
 
         if(!TextUtils.isEmpty(title_val) && !TextUtils.isEmpty(desc_val) && mImageUri != null){
 
@@ -90,7 +94,16 @@ public class PostActivity extends AppCompatActivity {
                         @Override
                         public void onSuccess(Uri uri) {
                             final Uri downloadUrl = uri;
+
+                            DatabaseReference newPost = mDatabase.push();
+
+                            newPost.child("title").setValue(title_val);
+                            newPost.child("desc").setValue(desc_val);
+                            newPost.child("image").setValue(downloadUrl.toString());
+
                             mProgress.dismiss();
+
+                            startActivity(new Intent(PostActivity.this,MainActivity.class));
                         }
                     });
 
